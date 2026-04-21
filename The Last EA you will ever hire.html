@@ -1,0 +1,505 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+#stage {
+  width: 100%;
+  background: #0a0a0f;
+  min-height: 520px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+#slide-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 48px;
+  pointer-events: none;
+}
+
+.slide-tag {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 99px;
+  border: 1.5px solid currentColor;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s, transform 0.5s;
+  margin-bottom: 20px;
+}
+
+.slide-headline {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(22px, 4.5vw, 38px);
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s 0.1s, transform 0.6s 0.1s;
+  margin-bottom: 14px;
+}
+
+.slide-headline span { display: inline; }
+
+.slide-sub {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(12px, 2vw, 15px);
+  font-weight: 400;
+  text-align: center;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.55);
+  max-width: 520px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s 0.2s, transform 0.6s 0.2s;
+  margin-bottom: 28px;
+}
+
+.slide-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.6s 0.3s, transform 0.6s 0.3s;
+}
+
+.pill {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 6px 14px;
+  border-radius: 99px;
+  color: #0a0a0f;
+}
+
+.slide-stat {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(52px, 10vw, 88px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.5s 0.1s, transform 0.5s 0.1s cubic-bezier(0.34,1.56,0.64,1);
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  opacity: 0;
+  transition: opacity 0.5s 0.3s;
+  margin-bottom: 28px;
+}
+
+.workflow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s 0.2s, transform 0.6s 0.2s;
+}
+
+.wf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.wf-num {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #0a0a0f;
+}
+
+.wf-title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+}
+
+.wf-desc {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  flex: 2;
+}
+
+#nav {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  pointer-events: all;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+.dot.active { transform: scale(1.4); }
+
+#tap-hint {
+  position: absolute;
+  bottom: 50px;
+  right: 28px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  pointer-events: none;
+}
+
+.in .slide-tag,
+.in .slide-headline,
+.in .slide-sub,
+.in .slide-pills,
+.in .slide-stat,
+.in .stat-label,
+.in .workflow-list { opacity: 1; transform: none !important; }
+</style>
+
+<h2 class="sr-only">Animated pitch deck: AI-powered executive assistant — tap to advance through 6 slides covering the role, tools, workflows, and closing pitch</h2>
+
+<div id="stage">
+  <canvas id="bg"></canvas>
+  <div id="slide-content"></div>
+  <div id="nav"></div>
+  <div id="tap-hint">tap to advance</div>
+</div>
+
+<script>
+(function(){
+
+const SLIDES = [
+  {
+    tag: { text: "role", color: "#FF3CAC" },
+    type: "hero",
+    headline: "The last EA\nyou'll ever hire.",
+    sub: "Your operations don't just get managed — they get engineered. AI-native from day one.",
+    pills: [
+      { text: "AI-native", bg: "#FF3CAC" },
+      { text: "Automation-first", bg: "#784BA0" },
+      { text: "Zero drop-balls", bg: "#2B86C5" },
+    ],
+    accent: "#FF3CAC",
+    orbs: [
+      { x:0.85, y:0.15, r:110, c:"#FF3CAC", a:0.18 },
+      { x:0.1,  y:0.8,  r:80,  c:"#784BA0", a:0.22 },
+      { x:0.5,  y:0.5,  r:200, c:"#2B86C5", a:0.06 },
+    ]
+  },
+  {
+    tag: { text: "the problem", color: "#FF6B35" },
+    type: "stat",
+    stat: "23%",
+    statColor: "#FF6B35",
+    statLabel: "of executive time lost to tasks AI can automate",
+    sub: "Inbox overwhelm. Calendar chaos. Manual everything. A traditional EA manages the mess — I eliminate it.",
+    accent: "#FF6B35",
+    orbs: [
+      { x:0.9,  y:0.1,  r:140, c:"#FF6B35", a:0.15 },
+      { x:0.05, y:0.6,  r:60,  c:"#FF3CAC", a:0.18 },
+      { x:0.6,  y:0.85, r:90,  c:"#FFBE0B", a:0.12 },
+    ]
+  },
+  {
+    tag: { text: "the stack", color: "#00F5D4" },
+    type: "pills-grid",
+    headline: "Tools most EAs\nhave never heard of.",
+    pills: [
+      { text: "Lindy AI — autonomous agents", bg: "#00F5D4", dark: true },
+      { text: "n8n — custom automation", bg: "#8338EC" },
+      { text: "Perplexity — live research", bg: "#3A86FF" },
+      { text: "Reclaim.ai — calendar AI", bg: "#FF006E" },
+      { text: "Superhuman — inbox AI", bg: "#FB5607" },
+      { text: "Otter.ai — meeting intel", bg: "#FFBE0B", dark: true },
+      { text: "Make.com — visual logic", bg: "#3A86FF" },
+      { text: "Claude / GPT-4o — core AI", bg: "#FF3CAC" },
+      { text: "Fireflies — auto minutes", bg: "#00F5D4", dark: true },
+    ],
+    accent: "#00F5D4",
+    orbs: [
+      { x:0.05, y:0.1, r:100, c:"#00F5D4", a:0.12 },
+      { x:0.9,  y:0.8, r:120, c:"#8338EC", a:0.18 },
+      { x:0.5,  y:0.5, r:180, c:"#3A86FF", a:0.06 },
+    ]
+  },
+  {
+    tag: { text: "week one", color: "#FFBE0B" },
+    type: "workflows",
+    headline: "5 systems. Built week one.\nRunning without you.",
+    accent: "#FFBE0B",
+    workflows: [
+      { n:"01", title:"Inbox-to-Action Pipeline", desc:"Emails classified, prioritized & drafted in your voice — before you open Gmail", c:"#FF3CAC" },
+      { n:"02", title:"Meeting Prep Auto-Brief",  desc:"30 min before every call: attendee intel, agenda, open action items", c:"#FFBE0B" },
+      { n:"03", title:"Voice-to-Task Engine",     desc:"You speak → Otter transcribes → AI parses → Asana captures. Zero friction.", c:"#00F5D4" },
+      { n:"04", title:"Invoice & Payment Brain",  desc:"Invoices logged, due dates tracked, dashboard updated in real time", c:"#8338EC" },
+      { n:"05", title:"ADHD Morning OS",          desc:"8am brief: priorities ranked, calendar confirmed, one focus block protected", c:"#FB5607" },
+    ],
+    orbs: [
+      { x:0.92, y:0.5, r:130, c:"#FFBE0B", a:0.12 },
+      { x:0.08, y:0.5, r:80,  c:"#FF3CAC", a:0.15 },
+    ]
+  },
+  {
+    tag: { text: "the edge", color: "#8338EC" },
+    type: "stat",
+    stat: "10×",
+    statColor: "#8338EC",
+    statLabel: "faster task completion vs. traditional EA workflows",
+    sub: "Lindy AI agents act without being asked. n8n pipelines run while you sleep. Your business operates at AI speed.",
+    accent: "#8338EC",
+    orbs: [
+      { x:0.15, y:0.2,  r:150, c:"#8338EC", a:0.2  },
+      { x:0.85, y:0.75, r:100, c:"#FF3CAC", a:0.15 },
+      { x:0.5,  y:0.5,  r:220, c:"#3A86FF", a:0.05 },
+    ]
+  },
+  {
+    tag: { text: "ready now", color: "#FF006E" },
+    type: "hero",
+    headline: "Let's build the system\nthat runs your business.",
+    sub: "Available immediately · CST business hours · AI-ready day one · Zero ramp-up time",
+    pills: [
+      { text: "Book a 30-min call", bg: "#FF006E" },
+      { text: "CST overlap", bg: "#3A86FF" },
+      { text: "Start this week", bg: "#FFBE0B", dark: true },
+    ],
+    accent: "#FF006E",
+    orbs: [
+      { x:0.8,  y:0.2,  r:130, c:"#FF006E", a:0.2  },
+      { x:0.2,  y:0.75, r:90,  c:"#FFBE0B", a:0.18 },
+      { x:0.55, y:0.45, r:200, c:"#8338EC", a:0.08 },
+    ]
+  }
+];
+
+let current = 0;
+let animFrame;
+let particles = [];
+let stageW, stageH;
+
+const stage   = document.getElementById('stage');
+const canvas  = document.getElementById('bg');
+const content = document.getElementById('slide-content');
+const nav     = document.getElementById('nav');
+const ctx     = canvas.getContext('2d');
+
+function resize(){
+  stageW = stage.offsetWidth;
+  stageH = stage.offsetHeight || 520;
+  canvas.width  = stageW;
+  canvas.height = stageH;
+}
+
+function spawnParticles(accent){
+  for(let i=0;i<18;i++){
+    particles.push({
+      x: stageW * (0.3 + Math.random()*0.4),
+      y: stageH * 0.5,
+      vx: (Math.random()-0.5)*4,
+      vy: (Math.random()-1.2)*5,
+      r: 2+Math.random()*4,
+      life: 1,
+      color: accent
+    });
+  }
+}
+
+function drawBg(slide){
+  ctx.clearRect(0,0,stageW,stageH);
+  ctx.fillStyle="#0a0a0f";
+  ctx.fillRect(0,0,stageW,stageH);
+
+  slide.orbs.forEach(o=>{
+    const x=o.x*stageW, y=o.y*stageH;
+    ctx.beginPath();
+    ctx.arc(x,y,o.r,0,Math.PI*2);
+    ctx.fillStyle=hexAlpha(o.c, o.a);
+    ctx.fill();
+  });
+
+  particles = particles.filter(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life-=0.025;
+    if(p.life<=0) return false;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+    ctx.fillStyle=hexAlpha(p.color, p.life*0.8);
+    ctx.fill();
+    return true;
+  });
+}
+
+function hexAlpha(hex,a){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function loop(){
+  drawBg(SLIDES[current]);
+  animFrame = requestAnimationFrame(loop);
+}
+
+function buildNav(){
+  nav.innerHTML='';
+  SLIDES.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(i===current?' active':'');
+    d.style.background = i===current ? SLIDES[i].accent : 'rgba(255,255,255,0.2)';
+    d.addEventListener('click', e=>{ e.stopPropagation(); goTo(i); });
+    nav.appendChild(d);
+  });
+}
+
+function renderSlide(idx, instant){
+  const s = SLIDES[idx];
+  content.innerHTML='';
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText='display:flex;flex-direction:column;align-items:center;width:100%;';
+
+  if(s.tag){
+    const tag=document.createElement('div');
+    tag.className='slide-tag';
+    tag.textContent=s.tag.text;
+    tag.style.color=s.tag.color;
+    tag.style.borderColor=s.tag.color;
+    wrap.appendChild(tag);
+  }
+
+  if(s.type==='hero' || s.type==='pills-grid'){
+    const h=document.createElement('div');
+    h.className='slide-headline';
+    h.innerHTML=s.headline.replace(/\n/g,'<br>');
+    wrap.appendChild(h);
+  }
+
+  if(s.type==='stat'){
+    const stat=document.createElement('div');
+    stat.className='slide-stat';
+    stat.textContent=s.stat;
+    stat.style.color=s.statColor;
+    wrap.appendChild(stat);
+    const sl=document.createElement('div');
+    sl.className='stat-label';
+    sl.textContent=s.statLabel;
+    wrap.appendChild(sl);
+  }
+
+  if(s.type==='workflows'){
+    const h=document.createElement('div');
+    h.className='slide-headline';
+    h.style.marginBottom='20px';
+    h.innerHTML=s.headline.replace(/\n/g,'<br>');
+    wrap.appendChild(h);
+
+    const wl=document.createElement('div');
+    wl.className='workflow-list';
+    s.workflows.forEach(w=>{
+      const row=document.createElement('div');
+      row.className='wf-row';
+      row.innerHTML=`<div class="wf-num" style="background:${w.c}">${w.n}</div><div class="wf-title">${w.title}</div><div class="wf-desc">${w.desc}</div>`;
+      wl.appendChild(row);
+    });
+    wrap.appendChild(wl);
+  }
+
+  if(s.sub){
+    const sub=document.createElement('div');
+    sub.className='slide-sub';
+    sub.textContent=s.sub;
+    wrap.appendChild(sub);
+  }
+
+  if(s.pills && s.pills.length){
+    const pills=document.createElement('div');
+    pills.className='slide-pills';
+    s.pills.forEach(p=>{
+      const el=document.createElement('div');
+      el.className='pill';
+      el.textContent=p.text;
+      el.style.background=p.bg;
+      el.style.color=p.dark ? '#0a0a0f' : '#ffffff';
+      pills.appendChild(el);
+    });
+    wrap.appendChild(pills);
+  }
+
+  content.appendChild(wrap);
+
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{ wrap.classList.add('in'); });
+  });
+}
+
+function goTo(idx){
+  if(idx===current) return;
+  current=idx;
+  spawnParticles(SLIDES[current].accent);
+  renderSlide(current);
+  buildNav();
+}
+
+stage.addEventListener('click', ()=>{
+  goTo((current+1) % SLIDES.length);
+});
+
+resize();
+loop();
+renderSlide(0);
+buildNav();
+
+window.addEventListener('resize', ()=>{ resize(); });
+
+})();
+</script>
